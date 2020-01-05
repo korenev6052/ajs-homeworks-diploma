@@ -43,13 +43,6 @@ module.exports = {
         },
       },
       {
-        test: /\.tsx?$/,
-        exclude: /node_modules/,
-        use: {
-          loader: 'ts-loader',
-        },
-      },
-      {
         test: /\.css$/i,
         use: [MiniCssExtractPlugin.loader, 'css-loader'],
       },
@@ -65,9 +58,6 @@ module.exports = {
         ],
       },
     ],
-  },
-  resolve: {
-    extensions: ['.tsx', '.ts', '.js'],
   },
   devServer: {
     contentBase: path.join(__dirname, 'dist'),
