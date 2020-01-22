@@ -14,10 +14,10 @@ export function* characterGenerator(allowedTypes, maxLevel) {
   }
 }
 
-export function generateTeam(allowedTypes, maxLevel, characterCount) {
+export function generateTeam(allowedTypes, maxLevel, charactersCount) {
   const generator = characterGenerator(allowedTypes, maxLevel);
   const team = [];
-  for (let i = 0; i < characterCount; i += 1) {
+  for (let i = 0; i < charactersCount; i += 1) {
     team.push(generator.next().value);
   }
   return team;

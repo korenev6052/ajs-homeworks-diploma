@@ -1,14 +1,29 @@
 export default class Character {
   constructor(level, type = 'generic') {
+    this.type = type;
     this.level = level;
     this.attack = 0;
     this.defence = 0;
     this.health = 50;
-    this.type = type;
+    this.currentHealth = this.health;
 
     if (new.target.name === 'Character') {
       throw new Error('User use <new Character()>');
     }
+  }
+
+  levelUp() {
+    this.level += 1;
+    this.attack = Math.max(this.attack, this.attack * (1.8 - this.currentHealth / 100));
+    this.health = (this.currentHealth < 20) ? this.currentHealth + 80 : 100;
+  }
+
+  restoreCurrentHealth() {
+    this.currentHealth = this.health;
+  }
+
+  isLiving() {
+    return (this.currentHealth) ? true : false;
   }
 }
 
