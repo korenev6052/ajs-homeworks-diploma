@@ -6,6 +6,7 @@ export default class GameController {
   constructor(gamePlay, stateService) {
     this.gamePlay = gamePlay;
     this.stateService = stateService;
+    this.positionedCharacters = [];
   }
 
   init() {
@@ -14,8 +15,11 @@ export default class GameController {
     this.gamePlay.drawUi(themes.prairie);
     const user = new UserTeam();
     const computer = new ComputerTeam();
-    let positionedCharacters = generatePositionedCharacters(user, computer, this.gamePlay.boardSize);
-    this.gamePlay.redrawPositions(positionedCharacters);
+    this.positionedCharacters = generatePositionedCharacters(user, computer, this.gamePlay.boardSize);
+    this.gamePlay.redrawPositions(this.positionedCharacters);
+    this.gamePlay.addCellEnterListener(this.onCellEnter.bind(this));
+    this.gamePlay.addCellLeaveListener(this.onCellLeave.bind(this));
+
   }
 
   onCellClick(index) {
@@ -24,9 +28,16 @@ export default class GameController {
 
   onCellEnter(index) {
     // TODO: react to mouse enter
+    if (this.gamePlay.cells[index].innerHTML !== '') {
+      const positionedCharacter = this.positionedCharacters.find((positionedCharacter) => {
+        return positionedCharacter.position === index;
+      });
+      this.gamePlay.showCellTooltip(positionedCharacter.character.message, index);
+    }
   }
 
   onCellLeave(index) {
     // TODO: react to mouse leave
+    this.gamePlay.hideCellTooltip(index);
   }
 }

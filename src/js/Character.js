@@ -1,3 +1,5 @@
+import emoji from './emoji';
+
 export default class Character {
   constructor(level, type = 'generic') {
     this.type = type;
@@ -10,6 +12,14 @@ export default class Character {
     if (new.target.name === 'Character') {
       throw new Error('User use <new Character()>');
     }
+  }
+
+  get message() {
+    const level = `${emoji.medal} ${this.level} `;
+    const attack = `${emoji.swords} ${this.attack} `;
+    const defence = `${emoji.shield} ${this.defence} `;
+    const currentHealth = `${emoji.heart} ${this.currentHealth}`;
+    return level + attack + defence + currentHealth;
   }
 
   levelUp() {
