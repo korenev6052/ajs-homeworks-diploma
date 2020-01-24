@@ -76,7 +76,7 @@ export default class GamePlay {
     for (const position of positions) {
       const cellEl = this.boardEl.children[position.position];
       const charEl = document.createElement('div');
-      charEl.classList.add('character', position.character.type.toLowerCase());
+      charEl.classList.add('character', position.character.type);
 
       const healthEl = document.createElement('div');
       healthEl.classList.add('health-level');
