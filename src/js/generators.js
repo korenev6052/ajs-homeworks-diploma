@@ -17,7 +17,7 @@ export function* characterGenerator(allowedTypes, maxLevel) {
   }
 }
 
-export function generateTeam(allowedTypes, maxLevel, charactersCount) {
+export function generateCharacters(allowedTypes, maxLevel, charactersCount) {
   const generator = characterGenerator(allowedTypes, maxLevel);
   const team = [];
   for (let i = 0; i < charactersCount; i += 1) {
@@ -26,33 +26,32 @@ export function generateTeam(allowedTypes, maxLevel, charactersCount) {
   return team;
 }
 
-export function generatePositions(teamNumber, charactersCount, boardSize) {
-  if (teamNumber !== 1 && teamNumber !== 2) {
-    throw new Error('Invalid team number');
+export function generatePositions(boardSize, side, count) {
+  if (side !== 'left' && side !== 'right') {
+    throw new Error('Side must be <left> or <right>');
   }
 
   const allowedPositions = [];
   const n = Math.pow(boardSize, 2);
-  let i = (teamNumber === 1) ? 0 : boardSize - 2;
+  let i = (side === 'left') ? 0 : boardSize - 2;
 
   for (i; i < n; i += boardSize) {
     allowedPositions.push(i);
     allowedPositions.push(i + 1);
   }
 
-  const positions = shuffle(allowedPositions).slice(0, charactersCount);
-  return positions;
+  return shuffle(allowedPositions).slice(0, count);
 }
 
 export function generatePositionedCharacters(team1, team2, boardSize) {
-  const positions1 = generatePositions(1, team1.livingCharactersCount, boardSize);
+  const positions1 = generatePositions(boardSize, 'left', team1.charactersCount);
   const positionedCharacters1 = team1.characters.map((character, i) => {
-    return new PositionedCharacter(character, positions1[i]);
+    return new PositionedCharacter(character, positions1[i], team1.player);
   });
 
-  const positions2 = generatePositions(2, team2.livingCharactersCount, boardSize);
+  const positions2 = generatePositions(boardSize, 'right', team2.charactersCount);
   const positionedCharacters2 = team2.characters.map((character, i) => {
-    return new PositionedCharacter(character, positions2[i]);
+    return new PositionedCharacter(character, positions2[i], team2.player);
   });
 
   return positionedCharacters1.concat(positionedCharacters2);
