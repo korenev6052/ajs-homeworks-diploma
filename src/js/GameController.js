@@ -4,6 +4,7 @@ import themes from "./themes";
 import { User, Engine } from "./Team";
 import { Bowman, Swordsman } from "./Character";
 import { generateCharacters, generatePositionedCharacters } from "./generators";
+import { calcActionPositions } from './utils';
 
 export default class GameController {
   constructor(gamePlay, stateService) {
@@ -20,6 +21,8 @@ export default class GameController {
     this.gamePlay.addCellEnterListener(this.onCellEnter.bind(this));
     this.gamePlay.addCellLeaveListener(this.onCellLeave.bind(this));
     this.gamePlay.addCellClickListener(this.onCellClick.bind(this));
+
+    calcActionPositions(44, 4, 8);
   }
 
   onNewGame() {
