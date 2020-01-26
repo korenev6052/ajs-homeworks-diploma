@@ -11,7 +11,7 @@ export default class GameController {
   constructor(gamePlay, stateService) {
     this.gamePlay = gamePlay;
     this.stateService = stateService;
-    this.gameStarted = false;
+    this.boardUnlocked = false;
   }
 
   init() {
@@ -44,12 +44,12 @@ export default class GameController {
     );
     this.gamePlay.redrawPositions(this.gameState.positionedCharacters);
     this.gameState.acivePlayer = this.gameState.user.player;
-    this.gameStarted = true;
+    this.boardUnlocked = true;
   }
 
   onCellEnter(index) {
     // TODO: react to mouse enter
-    if (!this.gameStarted || !this.isUsersActivePlayer()) {
+    if (!this.boardUnlocked || !this.isUsersActivePlayer()) {
       this.gamePlay.setCursor('not-allowed');
       return;
     }
@@ -97,7 +97,7 @@ export default class GameController {
 
   onCellLeave(index) {
     // TODO: react to mouse leave
-    if (!this.gameStarted) return;
+    if (!this.boardUnlocked) return;
 
     this.gamePlay.hideCellTooltip(index);
 
@@ -108,7 +108,7 @@ export default class GameController {
 
   onCellClick(index) {
     // TODO: react to click
-    if (!this.gameStarted) {
+    if (!this.boardUnlocked) {
       GamePlay.showMessage(errors.code301);
       return;
     }
@@ -128,12 +128,7 @@ export default class GameController {
         return;
       }
 
-      this.gamePlay.deselectCell(this.selectedCharacter.position);
-      this.gamePlay.deselectCell(index);
-      this.selectedCharacter.position = index;
-      this.selectedCharacter = null;
-      this.gamePlay.redrawPositions(this.gameState.positionedCharacters);
-      this.gameState.acivePlayer = this.gameState.engine.player;
+      this.moveCharacter(index);
     }, (innerCharacter) => {
       // Сell is not empty, users character is not selected
       if (!this.isInnerUsersCharacter(innerCharacter)) {
@@ -154,6 +149,8 @@ export default class GameController {
         GamePlay.showError(errors.code306);
         return;
       }
+
+      this.attackCharacter(index, innerCharacter);
     });
   }
 
@@ -162,6 +159,34 @@ export default class GameController {
     this.selectedCharacter = innerCharacter;
     this.movePositions = calcActionPositions(index, innerCharacter.character.moveRadius, this.gamePlay.boardSize);
     this.attackPositions = calcActionPositions(index, innerCharacter.character.attackRadius, this.gamePlay.boardSize);
+  }
+
+  moveCharacter(index) {
+    this.gamePlay.deselectCell(this.selectedCharacter.position);
+    this.gamePlay.deselectCell(index);
+    this.selectedCharacter.position = index;
+    this.selectedCharacter = null;
+    this.gamePlay.redrawPositions(this.gameState.positionedCharacters);
+    // this.gameState.acivePlayer = this.gameState.engine.player;
+  }
+
+  attackCharacter(index, innerCharacter) {
+    const damage = Math.max(
+      this.selectedCharacter.character.attack - innerCharacter.character.defence,
+      this.selectedCharacter.character.attack * 0.1
+    );
+    this.gamePlay.deselectCell(this.selectedCharacter.position);
+    this.gamePlay.deselectCell(index);
+    this.boardUnlocked = false;
+    this.gamePlay.showDamage(index, damage).then(() => {
+      innerCharacter.character.health -= damage;
+      this.gameState.positionedCharacters = this.gameState.positionedCharacters
+        .filter((positionedCharacter) => positionedCharacter.character.health > 0);
+      this.selectedCharacter = null;
+      this.gamePlay.redrawPositions(this.gameState.positionedCharacters);
+      // this.gameState.acivePlayer = this.gameState.engine.player;
+      this.boardUnlocked = true;
+    });
   }
 
   isInnerCharacter(index) {
