@@ -42,7 +42,6 @@ export default class GameController {
       this.gameState.engine,
       this.gamePlay.boardSize
     );
-
     this.gamePlay.redrawPositions(this.gameState.positionedCharacters);
     this.gameState.acivePlayer = this.gameState.user.player;
     this.gameStarted = true;
@@ -128,6 +127,13 @@ export default class GameController {
         GamePlay.showError(errors.code304);
         return;
       }
+
+      this.gamePlay.deselectCell(this.selectedCharacter.position);
+      this.gamePlay.deselectCell(index);
+      this.selectedCharacter.position = index;
+      this.selectedCharacter = null;
+      this.gamePlay.redrawPositions(this.gameState.positionedCharacters);
+      this.gameState.acivePlayer = this.gameState.engine.player;
     }, (innerCharacter) => {
       // Сell is not empty, users character is not selected
       if (!this.isInnerUsersCharacter(innerCharacter)) {
@@ -180,11 +186,13 @@ export default class GameController {
   }
 
   actionWithCell(index, callback1, callback2, callback3, callback4) {
+    // Сell is empty, users character is not selected
     if (!this.isInnerCharacter(index) && !this.selectedCharacter) {
       callback1();
       return;
     }
 
+    // Cell is empty, users character is selected
     if (!this.isInnerCharacter(index) && this.selectedCharacter) {
       callback2();
       return;
@@ -193,11 +201,13 @@ export default class GameController {
     const innerCharacter = this.gameState.positionedCharacters
       .find((positionedCharacter) => positionedCharacter.position === index);
 
+    // Сell is not empty, users character is not selected
     if (!this.selectedCharacter) {
       callback3(innerCharacter);
       return;
     }
 
+    // Сell is not empty, users character is selected
     if (this.selectedCharacter) {
       callback4(innerCharacter);
       return;
