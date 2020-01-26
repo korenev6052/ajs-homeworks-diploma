@@ -127,6 +127,13 @@ export default class GameController {
         GamePlay.showError(errors.code304);
         return;
       }
+
+      this.gamePlay.deselectCell(this.selectedCharacter.position);
+      this.gamePlay.deselectCell(index);
+      this.selectedCharacter.position = index;
+      this.selectedCharacter = null;
+      this.gamePlay.redrawPositions(this.gameState.positionedCharacters);
+      this.gameState.acivePlayer = this.gameState.engine.player;
     }, (innerCharacter) => {
       // Сell is not empty, users character is not selected
       if (!this.isInnerUsersCharacter(innerCharacter)) {
