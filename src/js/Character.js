@@ -4,10 +4,12 @@ export default class Character {
   constructor(level, type = 'generic') {
     this.type = type;
     this.level = level;
-    this.attack = 25;
-    this.defence = 25;
-    this.health = 100;
-    this.maxHealth = 100;
+    this.attack = null;
+    this.defence = null;
+    this.health = null;
+    this.maxHealth = null;
+    this.moveRadius = null;
+    this.attackRadius = null;
 
     if (new.target.name === 'Character') {
       throw new Error('User use <new Character()>');
@@ -44,6 +46,8 @@ export class Bowman extends Character {
     this.defence = 25;
     this.health = 100;
     this.maxHealth = 100;
+    this.moveRadius = 2;
+    this.attackRadius = 2;
   }
 }
 
@@ -54,6 +58,8 @@ export class Daemon extends Character {
     this.defence = 40;
     this.health = 100;
     this.maxHealth = 100;
+    this.moveRadius = 1;
+    this.attackRadius = 4;
   }
 }
 
@@ -64,6 +70,8 @@ export class Magician extends Character {
     this.defence = 40;
     this.health = 100;
     this.maxHealth = 100;
+    this.moveRadius = 1;
+    this.attackRadius = 4;
   }
 }
 
@@ -74,6 +82,8 @@ export class Swordsman extends Character {
     this.defence = 10;
     this.health = 100;
     this.maxHealth = 100;
+    this.moveRadius = 4;
+    this.attackRadius = 1;
   }
 }
 
@@ -83,6 +93,9 @@ export class Undead extends Character {
     this.attack = 25;
     this.defence = 25;
     this.health = 100;
+    this.maxHealth = 100;
+    this.moveRadius = 4;
+    this.attackRadius = 1;
   }
 }
 
@@ -92,5 +105,8 @@ export class Vampire extends Character {
     this.attack = 40;
     this.defence = 10;
     this.health = 100;
+    this.maxHealth = 100;
+    this.moveRadius = 2;
+    this.attackRadius = 2;
   }
 }
