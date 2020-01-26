@@ -38,3 +38,30 @@ export function shuffle(arr) {
   }
   return arr;
 }
+
+export function calcActionPositions(position, radius, boardSize) {
+  const board = [];
+  for (let i = 0; i < boardSize; i += 1) {
+    board[i] = [];
+    for (let j = 0; j < boardSize; j += 1) {
+      board[i][j] = i * boardSize + j;
+    }
+  }
+
+  const I = (position < boardSize) ? 0 : Math.floor(position / boardSize);
+  const J = (position < boardSize) ? position : position % boardSize;
+
+  const actionPositions = [];
+  for (let R = 1; R <= radius; R += 1) {
+    if ((I - R >= 0) && (J - R >= 0)) actionPositions.push(board[I - R][J - R]); // top-left
+    if (I - R >= 0) actionPositions.push(board[I - R][J]); // top
+    if ((I - R >= 0) && (J + R < boardSize)) actionPositions.push(board[I - R][J + R]); // top-right
+    if (J - R >= 0) actionPositions.push(board[I][J - R]); // left
+    if (J + R < boardSize) actionPositions.push(board[I][J + R]); // right
+    if ((I + R < boardSize) && (J - R >= 0)) actionPositions.push(board[I + R][J - R]); // bottom-left
+    if (I + R < boardSize) actionPositions.push(board[I + R][J]); // bottom
+    if ((I + R < boardSize) && (J + R < boardSize)) actionPositions.push(board[I + R][J + R]); // bottom-right
+  }
+
+  return actionPositions;
+}

@@ -4,11 +4,14 @@ import themes from "./themes";
 import { User, Engine } from "./Team";
 import { Bowman, Swordsman } from "./Character";
 import { generateCharacters, generatePositionedCharacters } from "./generators";
+import { calcActionPositions } from './utils';
+import errors from './errors';
 
 export default class GameController {
   constructor(gamePlay, stateService) {
     this.gamePlay = gamePlay;
     this.stateService = stateService;
+    this.gameStarted = false;
   }
 
   init() {
@@ -41,40 +44,163 @@ export default class GameController {
     );
 
     this.gamePlay.redrawPositions(this.gameState.positionedCharacters);
-    this.gameState.step = this.gameState.user.player;
+    this.gameState.acivePlayer = this.gameState.user.player;
+    this.gameStarted = true;
   }
 
   onCellEnter(index) {
     // TODO: react to mouse enter
-    if (this.gamePlay.cells[index].innerHTML === '') return;
+    if (!this.gameStarted || !this.isUsersActivePlayer()) {
+      this.gamePlay.setCursor('not-allowed');
+      return;
+    }
 
-    const { character } = this.gameState.positionedCharacters
-      .find((positionedCharacter) => positionedCharacter.position === index);
-    this.gamePlay.showCellTooltip(character.message, index);
+    this.actionWithCell(index, () => {
+      // Сell is empty, users character is not selected
+      this.gamePlay.setCursor('not-allowed');
+    }, () => {
+      // Cell is empty, users character is selected
+      if (!this.canMove(index)) {
+        this.gamePlay.setCursor('not-allowed');
+        return;
+      }
+
+      this.gamePlay.selectCell(index, 'green');
+      this.gamePlay.setCursor('pointer');
+    }, (innerCharacter) => {
+      // Сell is not empty, users character is not selected
+      this.gamePlay.showCellTooltip(innerCharacter.character.message, index);
+
+      if (this.isInnerUsersCharacter(innerCharacter)) {
+        this.gamePlay.setCursor('pointer');
+        return;
+      }
+
+      this.gamePlay.setCursor('not-allowed');
+    }, (innerCharacter) => {
+      // Сell is not empty, users character is selected
+      this.gamePlay.showCellTooltip(innerCharacter.character.message, index);
+
+      if (this.isInnerUsersCharacter(innerCharacter)) {
+        this.gamePlay.setCursor('pointer');
+        return;
+      }
+
+      if (!this.canAttack(index)) {
+        this.gamePlay.setCursor('not-allowed');
+        return;
+      }
+
+      this.gamePlay.selectCell(index, 'red');
+      this.gamePlay.setCursor('crosshair');
+    });
   }
 
   onCellLeave(index) {
     // TODO: react to mouse leave
+    if (!this.gameStarted) return;
+
     this.gamePlay.hideCellTooltip(index);
+
+    if (this.selectedCharacter && index !== this.selectedCharacter.position) {
+      this.gamePlay.deselectCell(index);
+    }
   }
 
   onCellClick(index) {
     // TODO: react to click
-    if (this.selectedCell !== index && this.sectedCell !== undefined) {
-      this.gamePlay.deselectCell(this.sectedCell);
+    if (!this.gameStarted) {
+      GamePlay.showMessage(errors.code301);
+      return;
     }
 
-    this.sectedCell = index;
+    if (!this.isUsersActivePlayer()) {
+      GamePlay.showMessage(errors.code302);
+      return;
+    }
 
-    if (this.gamePlay.cells[index].innerHTML == '') return;
+    this.actionWithCell(index, () => {
+      // Сell is empty, users character is not selected
+      GamePlay.showError(errors.code303);
+    }, () => {
+      // Cell is empty, users character is selected
+      if (!this.canMove(index)) {
+        GamePlay.showError(errors.code304);
+        return;
+      }
+    }, (innerCharacter) => {
+      // Сell is not empty, users character is not selected
+      if (!this.isInnerUsersCharacter(innerCharacter)) {
+        GamePlay.showError(errors.code305);
+        return;
+      }
 
-    const { player } = this.gameState.positionedCharacters
+      this.selectCharacter(index, innerCharacter);
+    }, (innerCharacter) => {
+      // Сell is not empty, users character is selected
+      if (this.isInnerUsersCharacter(innerCharacter)) {
+        this.gamePlay.deselectCell(this.selectedCharacter.position);
+        this.selectCharacter(index, innerCharacter);
+        return;
+      }
+
+      if (!this.canAttack(index)) {
+        GamePlay.showError(errors.code306);
+        return;
+      }
+    });
+  }
+
+  selectCharacter(index, innerCharacter) {
+    this.gamePlay.selectCell(index);
+    this.selectedCharacter = innerCharacter;
+    this.movePositions = calcActionPositions(index, innerCharacter.character.moveRadius, this.gamePlay.boardSize);
+    this.attackPositions = calcActionPositions(index, innerCharacter.character.attackRadius, this.gamePlay.boardSize);
+  }
+
+  isInnerCharacter(index) {
+    const innerCell = this.gamePlay.cells[index].innerHTML;
+    return (innerCell.indexOf('character') !== -1) ? true : false;
+  }
+
+  isInnerUsersCharacter(innerCharacter) {
+    return (innerCharacter.player === this.gameState.user.player) ? true : false;
+  }
+
+  isUsersActivePlayer() {
+    return (this.gameState.acivePlayer === this.gameState.user.player) ? true : false;
+  }
+
+  canMove(index) {
+    return (this.movePositions.indexOf(index) !== -1) ? true : false;
+  }
+
+  canAttack(index) {
+    return (this.attackPositions.indexOf(index) !== -1) ? true : false;
+  }
+
+  actionWithCell(index, callback1, callback2, callback3, callback4) {
+    if (!this.isInnerCharacter(index) && !this.selectedCharacter) {
+      callback1();
+      return;
+    }
+
+    if (!this.isInnerCharacter(index) && this.selectedCharacter) {
+      callback2();
+      return;
+    }
+
+    const innerCharacter = this.gameState.positionedCharacters
       .find((positionedCharacter) => positionedCharacter.position === index);
 
-    if (this.gameState.user.player === player && this.gameState.step === player) {
-      this.gamePlay.selectCell(index);
-    } else {
-      GamePlay.showError('Select user character');
+    if (!this.selectedCharacter) {
+      callback3(innerCharacter);
+      return;
+    }
+
+    if (this.selectedCharacter) {
+      callback4(innerCharacter);
+      return;
     }
   }
 }
