@@ -54,12 +54,12 @@ export function calcActionPositions(position, radius, boardSize) {
   const actionPositions = [];
   for (let R = 1; R <= radius; R += 1) {
     if ((I - R >= 0) && (J - R >= 0)) actionPositions.push(board[I - R][J - R]); // top-left
-    if (I - R >= 0) actionPositions.push(board[I - R][J]); // top-center
+    if (I - R >= 0) actionPositions.push(board[I - R][J]); // top
     if ((I - R >= 0) && (J + R < boardSize)) actionPositions.push(board[I - R][J + R]); // top-right
-    if (J - R >= 0) actionPositions.push(board[I][J - R]); // center-left
-    if (J + R < boardSize) actionPositions.push(board[I][J + R]); // center-right
+    if (J - R >= 0) actionPositions.push(board[I][J - R]); // left
+    if (J + R < boardSize) actionPositions.push(board[I][J + R]); // right
     if ((I + R < boardSize) && (J - R >= 0)) actionPositions.push(board[I + R][J - R]); // bottom-left
-    if (I + R < boardSize) actionPositions.push(board[I + R][J]); // bottom-center
+    if (I + R < boardSize) actionPositions.push(board[I + R][J]); // bottom
     if ((I + R < boardSize) && (J + R < boardSize)) actionPositions.push(board[I + R][J + R]); // bottom-right
   }
 
