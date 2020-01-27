@@ -45,14 +45,10 @@ export function generatePositions(boardSize, side, count) {
 
 export function generatePositionedCharacters(team1, team2, boardSize) {
   const positions1 = generatePositions(boardSize, 'left', team1.charactersCount);
-  const positionedCharacters1 = team1.characters.map((character, i) => {
-    return new PositionedCharacter(character, positions1[i], team1.player);
-  });
+  const positionedCharacters1 = team1.characters.map((character, i) => new PositionedCharacter(character, positions1[i], team1.player));
 
   const positions2 = generatePositions(boardSize, 'right', team2.charactersCount);
-  const positionedCharacters2 = team2.characters.map((character, i) => {
-    return new PositionedCharacter(character, positions2[i], team2.player);
-  });
+  const positionedCharacters2 = team2.characters.map((character, i) => new PositionedCharacter(character, positions2[i], team2.player));
 
   return positionedCharacters1.concat(positionedCharacters2);
 }
