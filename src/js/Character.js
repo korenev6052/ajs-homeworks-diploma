@@ -35,7 +35,7 @@ export default class Character {
   }
 
   isLiving() {
-    return (this.health) ? true : false;
+    return !!(this.health);
   }
 }
 

@@ -1,4 +1,6 @@
-import Character, { Bowman, Daemon, Magician, Swordsman, Vampire, Undead } from './Character';
+import Character, {
+  Bowman, Daemon, Magician, Swordsman, Vampire, Undead,
+} from './Character';
 
 export default class Team {
   constructor(player, allowedTypes) {
