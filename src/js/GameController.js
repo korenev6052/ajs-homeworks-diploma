@@ -273,7 +273,8 @@ export default class GameController {
     const usersPositionedCharacters = this.gameState.positionedCharacters
       .filter((positionedCharacter) => positionedCharacter.player === this.gameState.user.player);
 
-    return usersPositionedCharacters.find((userPositionedCharacter) => (this.attackPositions.indexOf(userPositionedCharacter.position) !== -1));
+    return usersPositionedCharacters
+      .find((userPositionedCharacter) => (this.attackPositions.indexOf(userPositionedCharacter.position) !== -1));
   }
 
   getPositionToMoveEngine() {
