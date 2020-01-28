@@ -3,7 +3,7 @@ import GameState from './GameState';
 import themes from './themes';
 import { User, Engine } from './Team';
 import { Bowman, Swordsman } from './Character';
-import { generateCharacters, generatePositionedCharacters } from './generators';
+import { generateCharacters, generatePositionedCharacters, characterGenerator } from './generators';
 import { calcActionPositions, randomItem } from './utils';
 import errors from './errors';
 
@@ -11,13 +11,17 @@ export default class GameController {
   constructor(gamePlay, stateService) {
     this.gamePlay = gamePlay;
     this.stateService = stateService;
+    this.gameState = new GameState();
     this.boardUnlocked = false;
+    this.selectedCharacter = null;
+    this.movePositions = [];
+    this.attackPositions = [];
   }
 
   init() {
     // TODO: add event listeners to gamePlay events
     // TODO: load saved stated from stateServic
-    this.gamePlay.drawUi(themes.prairie);
+    this.gamePlay.drawUi(this.gameState.theme);
 
     this.gamePlay.addNewGameListener(this.onNewGame.bind(this));
     this.gamePlay.addCellEnterListener(this.onCellEnter.bind(this));
@@ -26,25 +30,11 @@ export default class GameController {
   }
 
   onNewGame() {
-    this.gameState = new GameState();
-    this.gameState.theme = themes.prairie;
-    this.gamePlay.drawUi(this.gameState.theme);
-
+    this.gameState.round = 1;
     this.gameState.user = new User();
-    this.gameState.user.addCharacters([new Bowman(1), new Swordsman(1)]);
-
     this.gameState.engine = new Engine();
-    const randomCharacters = generateCharacters(this.gameState.engine.allowedTypes, 1, 2);
-    this.gameState.engine.addCharacters(randomCharacters);
 
-    this.gameState.positionedCharacters = generatePositionedCharacters(
-      this.gameState.user,
-      this.gameState.engine,
-      this.gamePlay.boardSize,
-    );
-    this.gamePlay.redrawPositions(this.gameState.positionedCharacters);
-    this.gameState.acivePlayer = this.gameState.user.player;
-    this.selectedCharacter = null;
+    this.newRoundInit();
     this.boardUnlocked = true;
   }
 
@@ -156,10 +146,45 @@ export default class GameController {
         return;
       }
 
+      this.gamePlay.deselectCell(this.selectedCharacter.position);
+      this.gamePlay.deselectCell(index);
       this.attackCharacter(index, innerCharacter, () => {
+        if (this.hasRoundWinner()) {
+          this.roundUp();
+          return;
+        }
+
         this.activateEngine();
       });
     });
+  }
+
+  actionWithCell(index, callback1, callback2, callback3, callback4) {
+    // Сell is empty, users character is not selected
+    if (!this.isInnerCharacter(index) && !this.selectedCharacter) {
+      callback1();
+      return;
+    }
+
+    // Cell is empty, users character is selected
+    if (!this.isInnerCharacter(index) && this.selectedCharacter) {
+      callback2();
+      return;
+    }
+
+    const innerCharacter = this.gameState.positionedCharacters
+      .find((positionedCharacter) => positionedCharacter.position === index);
+
+    // Сell is not empty, users character is not selected
+    if (!this.selectedCharacter) {
+      callback3(innerCharacter);
+      return;
+    }
+
+    // Сell is not empty, users character is selected
+    if (this.selectedCharacter) {
+      callback4(innerCharacter);
+    }
   }
 
   selectCharacter(index, innerCharacter) {
@@ -175,12 +200,11 @@ export default class GameController {
   }
 
   attackCharacter(index, innerCharacter, callback) {
-    const damage = Math.max(
+    const damage = Math.round(Math.max(
       this.selectedCharacter.character.attack - innerCharacter.character.defence,
       this.selectedCharacter.character.attack * 0.1,
-    );
-    this.gamePlay.deselectCell(this.selectedCharacter.position);
-    this.gamePlay.deselectCell(index);
+    ));
+
     this.boardUnlocked = false;
     this.gamePlay.showDamage(index, damage).then(() => {
       innerCharacter.character.health -= damage;
@@ -214,34 +238,6 @@ export default class GameController {
     return (this.attackPositions.indexOf(index) !== -1);
   }
 
-  actionWithCell(index, callback1, callback2, callback3, callback4) {
-    // Сell is empty, users character is not selected
-    if (!this.isInnerCharacter(index) && !this.selectedCharacter) {
-      callback1();
-      return;
-    }
-
-    // Cell is empty, users character is selected
-    if (!this.isInnerCharacter(index) && this.selectedCharacter) {
-      callback2();
-      return;
-    }
-
-    const innerCharacter = this.gameState.positionedCharacters
-      .find((positionedCharacter) => positionedCharacter.position === index);
-
-    // Сell is not empty, users character is not selected
-    if (!this.selectedCharacter) {
-      callback3(innerCharacter);
-      return;
-    }
-
-    // Сell is not empty, users character is selected
-    if (this.selectedCharacter) {
-      callback4(innerCharacter);
-    }
-  }
-
   activateEngine() {
     this.gameState.acivePlayer = this.gameState.engine.player;
 
@@ -264,6 +260,11 @@ export default class GameController {
     }
 
     this.attackCharacter(usersCharacterToAttack.position, usersCharacterToAttack, () => {
+      if (this.hasRoundWinner()) {
+        this.roundUp();
+        return;
+      }
+
       this.gameState.acivePlayer = this.gameState.user.player;
     });
   }
@@ -272,9 +273,8 @@ export default class GameController {
     const usersPositionedCharacters = this.gameState.positionedCharacters
       .filter((positionedCharacter) => positionedCharacter.player === this.gameState.user.player);
 
-    return usersPositionedCharacters.find((userPositionedCharacter) => {
-      return (this.attackPositions.indexOf(userPositionedCharacter.position) !== -1);
-    });
+    return usersPositionedCharacters
+      .find((userPositionedCharacter) => (this.attackPositions.indexOf(userPositionedCharacter.position) !== -1));
   }
 
   getPositionToMoveEngine() {
@@ -282,5 +282,91 @@ export default class GameController {
       .filter((movePosition) => !this.isInnerCharacter(movePosition));
 
     return randomItem(allowedMovePositions);
+  }
+
+  roundUp() {
+    const roundWinner = this.hasRoundWinner();
+    roundWinner.calcPoints();
+    this.gameState.round += 1;
+
+    if (this.gameState.round > 4) {
+      let gameWinner = gameWinner = this.gameState.user;
+
+      if (this.gameState.user.points < this.gameState.engine.points) {
+        gameWinner = this.gameState.engine;
+      }
+
+      this.gameState.statistics.push({
+        player: gameWinner.player,
+        points: gameWinner.points,
+      });
+      GamePlay.showMessage(`Game winner ${gameWinner.player} (${gameWinner.points} points)`);
+      this.gamePlay.drawUi(this.gameState.theme);
+      this.boardUnlocked = false;
+      console.log(this.gameState.statistics);
+      return;
+    }
+
+    GamePlay.showMessage(`Round winner ${roundWinner.player} (${roundWinner.points} points)`);
+    this.newRoundInit();
+  }
+
+  hasRoundWinner() {
+    if (this.gameState.user.livingCharactersCount === 0) {
+      return this.gameState.engine;
+    }
+
+    if (this.gameState.engine.livingCharactersCount === 0) {
+      return this.gameState.user;
+    }
+
+    return null;
+  }
+
+  usersTeamUpdate() {
+    if (this.gameState.round === 1) {
+      this.gameState.user.characters = [new Bowman(1), new Swordsman(1)];
+      return;
+    }
+
+    this.gameState.user.characters.forEach((character) => {
+      character.levelUp();
+      character.restoreHealth();
+    });
+
+    if (this.gameState.round === 2) {
+      const randomCharacter = characterGenerator(this.gameState.user.allowedTypes, 1).next().value;
+      this.gameState.user.addCharacter(randomCharacter);
+      return;
+    }
+
+    const maxLevel = this.gameState.round - 1;
+    const randomCharacters = generateCharacters(this.gameState.user.allowedTypes, maxLevel, 2);
+    this.gameState.user.addCharacters(randomCharacters);
+  }
+
+  enginesTeamUpdate() {
+    const maxLevel = this.gameState.round;
+    const charactersCount = this.gameState.user.livingCharactersCount;
+    const randomCharacters = generateCharacters(this.gameState.engine.allowedTypes, maxLevel, charactersCount);
+    this.gameState.engine.characters = randomCharacters;
+  }
+
+  newRoundInit() {
+    this.gameState.theme = themes[`round${this.gameState.round}`];
+    this.gamePlay.drawUi(this.gameState.theme);
+
+    this.usersTeamUpdate();
+    this.enginesTeamUpdate();
+
+    this.gameState.positionedCharacters = generatePositionedCharacters(
+      this.gameState.user,
+      this.gameState.engine,
+      this.gamePlay.boardSize,
+    );
+
+    this.gamePlay.redrawPositions(this.gameState.positionedCharacters);
+    this.gameState.acivePlayer = this.gameState.user.player;
+    this.selectedCharacter = null;
   }
 }

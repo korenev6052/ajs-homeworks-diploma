@@ -7,10 +7,18 @@ export default class Team {
     this.player = player;
     this.allowedTypes = allowedTypes;
     this._characters = new Set();
+    this.points = 0;
 
     if (new.target.name === 'Team') {
       throw new Error('User use <new Team()>');
     }
+  }
+
+  set characters(characters) {
+    this._characters.clear();
+    characters.forEach((character) => {
+      this._characters.add(character);
+    });
   }
 
   get characters() {
@@ -28,6 +36,7 @@ export default class Team {
   get livingCharactersCount() {
     return this.characters.reduce((count, character) => {
       if (character.isLiving()) count += 1;
+      return count;
     }, 0);
   }
 
@@ -50,6 +59,13 @@ export default class Team {
         character.levelUp();
       }
     });
+  }
+
+  calcPoints() {
+    this.points = this.characters.reduce((points, character) => {
+      if (character.isLiving()) points += character.health;
+      return points;
+    }, this.points);
   }
 }
 
