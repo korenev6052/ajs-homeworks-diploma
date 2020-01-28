@@ -26,7 +26,9 @@ export default class Character {
 
   levelUp() {
     this.level += 1;
-    this.attack = Math.max(this.attack, this.attack * (1.8 - this.health / 100));
+    this.attack = Math.round(Math.max(this.attack, this.attack * (1.8 - this.health / 100)));
+
+    if (this.health < 0) this.health = 0;
     this.maxHealth = (this.health < 20) ? this.health + 80 : 100;
   }
 
@@ -35,7 +37,7 @@ export default class Character {
   }
 
   isLiving() {
-    return !!(this.health);
+    return (this.health > 0);
   }
 }
 
