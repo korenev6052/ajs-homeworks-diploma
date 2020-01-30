@@ -1,4 +1,5 @@
 const themes = {
+  default: 'prairie',
   round1: 'prairie',
   round2: 'desert',
   round3: 'arctic',

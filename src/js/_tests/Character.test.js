@@ -1,6 +1,7 @@
 import Character, {
   Bowman, Swordsman, Daemon, Magician, Undead, Vampire,
 } from '../Character';
+import emoji from '../emoji';
 
 test('Create new Character()', () => {
   expect(() => new Character(1)).toThrow('User use <new Character()>');
@@ -88,4 +89,9 @@ test('Create new Vampire()', () => {
     moveRadius: 2,
     attackRadius: 2,
   });
+});
+
+test('Get character message', () => {
+  const bowman = new Bowman(1);
+  expect(bowman.message).toBe(`${emoji.medal} 1 ${emoji.swords} 25 ${emoji.shield} 25 ${emoji.heart} 100`);
 });
