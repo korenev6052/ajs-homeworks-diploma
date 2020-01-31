@@ -11,9 +11,9 @@ import { shuffle } from './utils';
 
 export function* characterGenerator(allowedTypes, maxLevel) {
   while (true) {
-    const randomType = allowedTypes[Math.floor(Math.random() * allowedTypes.length)];
+    const RandomType = allowedTypes[Math.floor(Math.random() * allowedTypes.length)];
     const randomLevel = Math.round(Math.random() * (maxLevel - 1) + 1);
-    yield new randomType(randomLevel);
+    yield new RandomType(randomLevel);
   }
 }
 
@@ -32,7 +32,7 @@ export function generatePositions(boardSize, side, count) {
   }
 
   const allowedPositions = [];
-  const n = Math.pow(boardSize, 2);
+  const n = boardSize ** 2;
   let i = (side === 'left') ? 0 : boardSize - 2;
 
   for (i; i < n; i += boardSize) {
@@ -45,10 +45,16 @@ export function generatePositions(boardSize, side, count) {
 
 export function generatePositionedCharacters(team1, team2, boardSize) {
   const positions1 = generatePositions(boardSize, 'left', team1.charactersCount);
-  const positionedCharacters1 = team1.characters.map((character, i) => new PositionedCharacter(character, positions1[i], team1.player));
+  const positionedCharacters1 = team1.characters.map((character, i) => {
+    const result = new PositionedCharacter(character, positions1[i], team1.player);
+    return result;
+  });
 
   const positions2 = generatePositions(boardSize, 'right', team2.charactersCount);
-  const positionedCharacters2 = team2.characters.map((character, i) => new PositionedCharacter(character, positions2[i], team2.player));
+  const positionedCharacters2 = team2.characters.map((character, i) => {
+    const result = new PositionedCharacter(character, positions2[i], team2.player);
+    return result;
+  });
 
   return positionedCharacters1.concat(positionedCharacters2);
 }

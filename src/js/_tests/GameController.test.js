@@ -22,7 +22,7 @@ test('Load game successfully', () => {
 
 test('Load game failed', () => {
   gameCtrl.stateService.load.mockImplementation(() => {
-    new Error('Invalid state');
+    Error('Invalid state');
   });
   expect(gameCtrl.onLoadGame()).toBe(false);
 });

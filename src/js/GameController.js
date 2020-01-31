@@ -286,7 +286,8 @@ export default class GameController {
 
     this.boardUnlocked = false;
     this.gamePlay.showDamage(index, damage).then(() => {
-      innerCharacter.character.health -= damage;
+      const characterToAttack = innerCharacter.character;
+      characterToAttack.health -= damage;
       this.gameState.positionedCharacters = this.gameState.positionedCharacters
         .filter((positionedCharacter) => positionedCharacter.character.health > 0);
       this.selectedCharacter = null;
@@ -369,7 +370,7 @@ export default class GameController {
     this.gameState.round += 1;
 
     if (this.gameState.round > 4) {
-      let gameWinner = gameWinner = this.gameState.user;
+      let gameWinner = this.gameState.user;
 
       if (this.gameState.user.points < this.gameState.engine.points) {
         gameWinner = this.gameState.engine;

@@ -35,6 +35,7 @@ export default class Team {
 
   get livingCharactersCount() {
     return this.characters.reduce((count, character) => {
+      // eslint-disable-next-line no-param-reassign
       if (character.isLiving()) count += 1;
       return count;
     }, 0);
@@ -63,6 +64,7 @@ export default class Team {
 
   calcPoints() {
     this.points = this.characters.reduce((points, character) => {
+      // eslint-disable-next-line no-param-reassign
       if (character.isLiving()) points += character.health;
       return points;
     }, this.points);

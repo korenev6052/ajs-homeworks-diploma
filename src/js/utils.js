@@ -2,7 +2,7 @@ export function calcTileType(index, boardSize) {
   const topLeft = 0;
   const topRight = boardSize - 1;
   const bottomLeft = boardSize * (boardSize - 1);
-  const bottomRight = Math.pow(boardSize, 2) - 1;
+  const bottomRight = boardSize ** 2 - 1;
 
   if (index === topLeft) return 'top-left';
   if (index === topRight) return 'top-right';
@@ -32,10 +32,12 @@ export function shuffle(arr) {
   let j;
   let temp;
 
-  for (let i = arr.length - 1; i > 0; i--) {
+  for (let i = arr.length - 1; i > 0; i -= 1) {
     j = Math.floor(Math.random() * (i + 1));
     temp = arr[j];
+    // eslint-disable-next-line no-param-reassign
     arr[j] = arr[i];
+    // eslint-disable-next-line no-param-reassign
     arr[i] = temp;
   }
 
